@@ -126,9 +126,13 @@
     
 }
 
+//
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
     
+    
+    NSLog(@"Load searchResult %@ ", searchResult_);
+    NSLog(@"Load dataResult %@ ", dataSource_);
     
 }
 
