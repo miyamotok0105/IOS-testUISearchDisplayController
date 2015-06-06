@@ -29,10 +29,12 @@
 
 
 
-@interface SampleForSearchDisplay : UITableViewController <UISearchDisplayDelegate>
+@interface SampleForSearchDisplay : UITableViewController <UISearchBarDelegate>
 {
 @protected
-    UISearchDisplayController* searchDisplay_;
+//    UISearchDisplayController* searchDisplay_;
+    UISearchController *searchDisplay_;
+    
     NSMutableArray* dataSource_;
     NSMutableArray* searchResult_;
 }

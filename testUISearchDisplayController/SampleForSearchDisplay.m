@@ -55,15 +55,12 @@
     UISearchBar* searchBar = [[UISearchBar alloc] init];
     searchBar.frame = CGRectMake( 0, 0, self.tableView.bounds.size.width, 0 );
     [searchBar sizeToFit];
-    searchBar.scopeButtonTitles = [NSArray arrayWithObjects:@"武器", @"女の子", @"男の子", nil];
+//    searchBar.scopeButtonTitles = [NSArray arrayWithObjects:@"武器", @"女の子", @"男の子", nil];
     searchBar.showsScopeBar = YES;
+    searchBar.delegate = self;
     self.tableView.tableHeaderView = searchBar;
     
-    searchDisplay_ =
-    [[UISearchDisplayController alloc] initWithSearchBar:searchBar contentsController:self];
-    searchDisplay_.delegate = self;
-    searchDisplay_.searchResultsDataSource = self;
-    searchDisplay_.searchResultsDelegate = self;
+
     
     NSArray* weapons = [NSArray arrayWithObjects:
                         @"大島優子",
@@ -88,77 +85,94 @@
     [dataSource_ sortUsingSelector:@selector(compare:)];
     
     searchResult_ = [[NSMutableArray alloc] initWithCapacity:dataSource_.count];
+    searchResult_ = [dataSource_ mutableCopy];
+    
+    NSLog(@"Load searchResult %@ ", searchResult_);
+    NSLog(@"Load dataResult %@ ", dataSource_);
     
     
 }
 
 
+//検索テキスト変更時
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
 
-- (BOOL)searchDisplayController:(UISearchDisplayController*)controller
-shouldReloadTableForSearchString:(NSString*)searchString
-{
-    // 縺�▲縺溘ｓ蜈ｨ繝��繧ｿ繧貞炎髯､
+    NSLog(@"root searchBar");
+    
     [searchResult_ removeAllObjects];
-    // 讀懃ｴ｢譁�ｭ怜�繧貞性繧繝��繧ｿ縺�縺題ｿｽ蜉�縺吶ｋ
+   
+    NSString* searchString = searchText;
+    
     for ( Item* item in dataSource_ ) {
-        if ( NSNotFound != [item.name rangeOfString:searchString].location ) {
-            [searchResult_ addObject:item];
+        
+        if((searchText == nil || [searchText isEqualToString:@""]))
+        {
+            searchResult_ = [dataSource_ mutableCopy];
+            break;
+        }
+        
+        if ( NSNotFound != [item.name rangeOfString:searchString].location )
+        {
+           [searchResult_ addObject:item];
         }
     }
-    return YES;
+    
+    
+    [self.tableView reloadData];
+    
+    NSLog(@"Load searchResult %@ ", searchResult_);
+    NSLog(@"Load dataResult %@ ", dataSource_);
+    
+    
 }
 
-- (BOOL)searchDisplayController:(UISearchDisplayController*)controller
-shouldReloadTableForSearchScope:(NSInteger)searchOption
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
-    // 縺�▲縺溘ｓ蜈ｨ繝��繧ｿ繧貞炎髯､
-    [searchResult_ removeAllObjects];
-    // 讀懃ｴ｢譁�ｭ怜�繧貞性縺ｿ縲√°縺､蜷郁�縺吶ｋ繧ｹ繧ｳ繝ｼ繝励�繝��繧ｿ縺�縺代ｒ霑ｽ蜉�縺吶ｋ
-    NSString* searchString = controller.searchBar.text;
-    for ( Item* item in dataSource_ ) {
-        if ( NSNotFound != [item.name rangeOfString:searchString].location ) {
-            if ( 0 == searchOption ) {
-                [searchResult_ addObject:item];
-            } else if ( 1 == searchOption ) {
-                if ( [item isWeapon] ) {
-                    [searchResult_ addObject:item];
-                }
-            } else {
-                if ( [item isArmor] ) {
-                    [searchResult_ addObject:item];
-                }
-            }
-        }
-    }
-    return YES;
+    
+    
 }
+
+//検索キャンセル時
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
+{
+    NSLog(@"root searchBarCancelButtonClicked");
+    
+    [searchResult_ removeAllObjects];
+    searchResult_ = [dataSource_ mutableCopy];
+    
+    [self.tableView reloadData];
+    
+    NSLog(@"Load searchResult %@ ", searchResult_);
+    NSLog(@"Load dataResult %@ ", dataSource_);
+    
+}
+
 
 #pragma mark UITableView methods
 
 - (NSInteger)tableView:(UITableView*)tableView
  numberOfRowsInSection:(NSInteger)section
 {
-    if ( tableView == self.searchDisplayController.searchResultsTableView ) {
-        return [searchResult_ count];
-    } else {
-        return [dataSource_ count];
-    }
+    NSLog(@"root tableView numberOfRowsInSection");
+    
+    return [searchResult_ count];
+    
 }
 
 - (UITableViewCell*)tableView:(UITableView*)tableView
         cellForRowAtIndexPath:(NSIndexPath*)indexPath
 {
+    NSLog(@"root tableView cellForRowAtIndexPath");
+    
+    
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
     
-    if ( tableView == self.searchDisplayController.searchResultsTableView ) {
-        cell.textLabel.text = [[searchResult_ objectAtIndex:indexPath.row] name];
-    } else {
-        cell.textLabel.text = [[dataSource_ objectAtIndex:indexPath.row] name];
-    }
+    cell.textLabel.text = [[searchResult_ objectAtIndex:indexPath.row] name];
+    
     return cell;
 }
 
